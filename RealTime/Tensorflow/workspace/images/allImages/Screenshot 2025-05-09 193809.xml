@@ -1,0 +1,26 @@
+<annotation>
+	<folder>allImages</folder>
+	<filename>Screenshot 2025-05-09 193809.png</filename>
+	<path>D:\Full Stack Web Developer\Python Task\RealTime\Tensorflow\workspace\images\allImages\Screenshot 2025-05-09 193809.png</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1440</width>
+		<height>900</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Packing</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>416</xmin>
+			<ymin>400</ymin>
+			<xmax>700</xmax>
+			<ymax>732</ymax>
+		</bndbox>
+	</object>
+</annotation>
