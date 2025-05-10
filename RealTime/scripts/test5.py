@@ -1,6 +1,5 @@
 import cv2
 import queue
-import time
 import threading
 
 q = queue.Queue()
@@ -23,27 +22,29 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 
 
 def Receive():
-    print("start Reveive")
+    print("start Receive")
     cap = cv2.VideoCapture("rtsp://test123:test123@192.168.1.8/stream1")
-    ret, frame = cap.read()
-    q.put(frame)
-    while ret:
+    while True:
         ret, frame = cap.read()
+        if not ret:
+            continue
         q.put(frame)
 
 
-def Display():
+if __name__ == "__main__":
+    recv_thread = threading.Thread(target=Receive)
+    recv_thread.daemon = True
+    recv_thread.start()
+
     print("Start Displaying")
     while True:
-        if q.empty() != True:
+        if not q.empty():
             frame = q.get()
-            cv2.imshow("frame1", ResizeWithAspectRatio(frame, width=1280))
+            frame = ResizeWithAspectRatio(frame, width=1280)
+            cv2.imshow("frame1", frame)
+
+        # This must be in the main thread
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
-
-if __name__ == "__main__":
-    p1 = threading.Thread(target=Receive)
-    p2 = threading.Thread(target=Display)
-    p1.start()
-    p2.start()
+    cv2.destroyAllWindows()

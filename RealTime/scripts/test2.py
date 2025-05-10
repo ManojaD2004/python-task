@@ -207,71 +207,72 @@ def Display():
             break
 
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Can't receive frame (stream end?). Exiting...")
-        break
-    image_np = np.array(frame)
-    input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-    detections = detect_fn(input_tensor)
-    num_detections = int(detections.pop("num_detections"))
-    detections = {
-        key: value[0, :num_detections].numpy() for key, value in detections.items()
-    }
-    detections["num_detections"] = num_detections
+def main1():
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Can't receive frame (stream end?). Exiting...")
+            break
+        image_np = np.array(frame)
+        input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
+        detections = detect_fn(input_tensor)
+        num_detections = int(detections.pop("num_detections"))
+        detections = {
+            key: value[0, :num_detections].numpy() for key, value in detections.items()
+        }
+        detections["num_detections"] = num_detections
 
-    # detection_classes should be ints.
-    detections["detection_classes"] = detections["detection_classes"].astype(np.int64)
+        # detection_classes should be ints.
+        detections["detection_classes"] = detections["detection_classes"].astype(np.int64)
 
-    label_id_offset = 1
-    image_np_with_detections = image_np.copy()
+        label_id_offset = 1
+        image_np_with_detections = image_np.copy()
 
-    # viz_utils.visualize_boxes_and_labels_on_image_array(
-    #     image_np_with_detections,
-    #     detections["detection_boxes"],
-    #     detections["detection_classes"] + label_id_offset,
-    #     detections["detection_scores"],
-    #     category_index,
-    #     use_normalized_coordinates=True,
-    #     max_boxes_to_draw=5,
-    #     min_score_thresh=0.1,
-    #     agnostic_mode=False,
-    # )
-    # print("max score:", max(detections["detection_scores"]))
+        # viz_utils.visualize_boxes_and_labels_on_image_array(
+        #     image_np_with_detections,
+        #     detections["detection_boxes"],
+        #     detections["detection_classes"] + label_id_offset,
+        #     detections["detection_scores"],
+        #     category_index,
+        #     use_normalized_coordinates=True,
+        #     max_boxes_to_draw=5,
+        #     min_score_thresh=0.1,
+        #     agnostic_mode=False,
+        # )
+        # print("max score:", max(detections["detection_scores"]))
 
-    image_np_with_detections = draw_boxes_opencv(
-        image_np_with_detections,
-        detections["detection_boxes"],
-        detections["detection_classes"] + label_id_offset,
-        detections["detection_scores"],
-        category_index,
-        threshold=0.5,  # or any min_score_thresh
-    )
-    # if first_time:
-    #     # print(detections)
-    #     print(category_index)
-    #     print(np.all(image_np == image_np_with_detections))
-    #     print(detections["detection_scores"])
+        image_np_with_detections = draw_boxes_opencv(
+            image_np_with_detections,
+            detections["detection_boxes"],
+            detections["detection_classes"] + label_id_offset,
+            detections["detection_scores"],
+            category_index,
+            threshold=0.5,  # or any min_score_thresh
+        )
+        # if first_time:
+        #     # print(detections)
+        #     print(category_index)
+        #     print(np.all(image_np == image_np_with_detections))
+        #     print(detections["detection_scores"])
 
-    # first_time = False
-    # cv2.imwrite("test_frame.jpg", image_np_with_detections)
-    # cv2.imwrite("test_frame1.jpg", frame)
-    # print("in")
-    # resized_frame = ResizeWithAspectRatio(image_np_with_detections, width=1280)
-    cv2.imshow("Object Detection", cv2.resize(image_np_with_detections, (800, 600)))
-    # cv2.imshow(
-    #     "Object Detection", cv2.cvtColor(image_np_with_detections, cv2.COLOR_RGB2BGR)
-    # )
-    # cv2.imshow("Object Detection", resized_frame)
+        # first_time = False
+        # cv2.imwrite("test_frame.jpg", image_np_with_detections)
+        # cv2.imwrite("test_frame1.jpg", frame)
+        # print("in")
+        # resized_frame = ResizeWithAspectRatio(image_np_with_detections, width=1280)
+        cv2.imshow("Object Detection", cv2.resize(image_np_with_detections, (800, 600)))
+        # cv2.imshow(
+        #     "Object Detection", cv2.cvtColor(image_np_with_detections, cv2.COLOR_RGB2BGR)
+        # )
+        # cv2.imshow("Object Detection", resized_frame)
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        cap.release()
-        break
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            cap.release()
+            break
 
 
-# if __name__ == "__main__":
-#     p1 = threading.Thread(target=Receive)
-#     p2 = threading.Thread(target=Display)
-#     p1.start()
-#     p2.start()
+if __name__ == "__main__":
+    p1 = threading.Thread(target=Receive)
+    p2 = threading.Thread(target=Display)
+    p1.start()
+    p2.start()
