@@ -48,6 +48,22 @@ latest_face_names = []
 detection_lock = threading.Lock()
 
 
+def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+
+    if width is None and height is None:
+        return image
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    return cv2.resize(image, dim, interpolation=inter)
+
+
 def detection_worker(sfr, video_stream, detection_interval=0.5):
     """
     Continuously grab the latest frame from the video stream and run face detection
@@ -87,7 +103,7 @@ def update_json():
 def main():
     # Initialize face recognition and load known face encodings.
     sfr = SimpleFacerec()
-    sfr.load_encoding_images("images/")  # Folder with known face images
+    sfr.load_encoding_images("./scripts/images")  # Folder with known face images
     print(sfr)
     # Use your mobile stream URL (try appending '/video' if needed)
     stream_url = "rtsp://test123:test123@192.168.1.8/stream1"
@@ -121,6 +137,7 @@ def main():
             face_names = latest_face_names.copy()
 
         # Draw detection results on the current frame.
+        # frame = ResizeWithAspectRatio(frame, width=1280)
         for face_loc, name in zip(face_locations, face_names):
             # face_loc is in [top, right, bottom, left] format.
             y1, x2, y2, x1 = face_loc
