@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append(
-    r"D:\Full Stack Web Developer\Python Task\RealTime\Tensorflow\models\research"
+    r"./Tensorflow/models/research"
 )
 
 import tensorflow as tf
