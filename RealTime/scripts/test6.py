@@ -55,7 +55,7 @@ category_index = label_map_util.create_category_index_from_labelmap(
 
 
 # Setup capture
-cap = cv2.VideoCapture("rtsp://test123:test123@192.168.1.8/stream1")
+cap = cv2.VideoCapture("rtsp://techgium:darkmode@192.168.137.4/stream1")
 if not cap.isOpened():
     print("Cannot open camera")
     exit()

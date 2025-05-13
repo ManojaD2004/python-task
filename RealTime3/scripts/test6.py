@@ -3,9 +3,7 @@ import sys
 
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-sys.path.append(
-    r"D:\Full Stack Web Developer\Python Task\RealTime\Tensorflow\models\research"
-)
+sys.path.append(r"./Tensorflow/models/research")
 
 import queue
 import time
@@ -55,6 +53,13 @@ category_index = label_map_util.create_category_index_from_labelmap(
 
 
 # Setup capture
+# 
+# 
+# 
+# Todo
+# 
+# 
+# 
 cap = cv2.VideoCapture("rtsp://test123:test123@192.168.1.8/stream1")
 if not cap.isOpened():
     print("Cannot open camera")
@@ -62,6 +67,7 @@ if not cap.isOpened():
 
 width1 = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height1 = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
 
 def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
     dim = None
@@ -78,15 +84,49 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 
     return cv2.resize(image, dim, interpolation=inter)
 
+
 q = queue.Queue()
 detection_lock = threading.Lock()
+label_id_offset = 1
 i1 = 1
 detections1 = None
+last_label = "NoPacking"
+total_packed = 0
+productive_time = 0
+total_time = 0
 
-def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0.5, draw_limit=5):
+
+def update_metadata(classes, scores, category_index, threshold=0.5, draw_limit=2):
+    # print(len(boxes))
+    for i in range(
+        min(len(classes), draw_limit)
+    ):  # draw up to 20 boxes or adjust as needed
+        score = scores[i]
+        # print(score, i)
+        if score >= threshold:
+            # print("in", score)
+            class_id = int(classes[i])
+            global total_time
+            total_time += 0.5
+            print("Class id: ",class_id)
+            if category_index[class_id]["name"] == "Packing":
+                global productive_time
+                productive_time += 0.5
+            global last_label
+            if last_label == "NoPacking" and category_index[class_id]["name"] == "Packing":
+                global total_packed
+                total_packed += 1
+            last_label = category_index[class_id]["name"]
+
+
+def draw_boxes_opencv(
+    image, boxes, classes, scores, category_index, threshold=0.5, draw_limit=2
+):
     height, width, _ = image.shape
     # print(len(boxes))
-    for i in range(min(len(boxes), draw_limit)):  # draw up to 20 boxes or adjust as needed
+    for i in range(
+        min(len(boxes), draw_limit)
+    ):  # draw up to 20 boxes or adjust as needed
         score = scores[i]
         # print(score, i)
         if score >= threshold:
@@ -98,7 +138,7 @@ def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0
                 if class_id in category_index
                 else str(class_id)
             )
-            label = f"{class_name}: {int(score * 100)}%"
+            label = f"{class_name}: {int(score * 100)}%, Total Time: {total_time}, Prod Time: {productive_time}"
 
             # If box coords are normalized → denormalize
             ymin, xmin, ymax, xmax = box
@@ -117,7 +157,7 @@ def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
 
             # Put label above box
-            label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+            label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
             label_ymin = max(ymin, label_size[1] + 10)
             cv2.rectangle(
                 image,
@@ -131,7 +171,7 @@ def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0
                 label,
                 (xmin, label_ymin - 5),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
+                1,
                 (0, 0, 0),
                 2,
             )
@@ -150,7 +190,7 @@ def Receive():
         q.put(frame)
 
 
-def do_detect(detection_interval = 0.5):
+def do_detect(detection_interval=0.5):
     global detections1
     while True:
         if not q.empty():
@@ -177,14 +217,23 @@ def do_detect(detection_interval = 0.5):
             # print("in 1 end")
             with detection_lock:
                 detections1 = detections
+                update_metadata(
+                    detections1["detection_classes"] + label_id_offset,
+                    detections1["detection_scores"],
+                    category_index,
+                    threshold=0.3,
+                )
+
             time.sleep(detection_interval)
 
 
 def main1():
     start_time = time.time()
     print("dummy detect started")
-    dummy_input = tf.convert_to_tensor(np.zeros((1, height1, width1, 3), dtype=np.float32))
-    _ = detect_fn(dummy_input)  
+    dummy_input = tf.convert_to_tensor(
+        np.zeros((1, height1, width1, 3), dtype=np.float32)
+    )
+    _ = detect_fn(dummy_input)
     print("dummy detect ended", time.time() - start_time, " sec")
     recv_thread = threading.Thread(target=Receive)
     recv_thread.daemon = True
@@ -198,7 +247,6 @@ def main1():
             frame = q.get()
             image_np = np.array(frame)
             image_np_with_detections = image_np.copy()
-            label_id_offset = 1
             if detections1:
                 # print("in 2")
                 image_np_with_detections = draw_boxes_opencv(
@@ -207,9 +255,9 @@ def main1():
                     detections1["detection_classes"] + label_id_offset,
                     detections1["detection_scores"],
                     category_index,
-                    threshold=0.5,  # or any min_score_thresh
+                    threshold=0.75,  # or any min_score_thresh
                 )
-            resized_frame = ResizeWithAspectRatio(image_np_with_detections, width=1280)
+            resized_frame = ResizeWithAspectRatio(image_np_with_detections, width=1440)
             cv2.imshow("Object Detection", resized_frame)
 
         # This must be in the main thread

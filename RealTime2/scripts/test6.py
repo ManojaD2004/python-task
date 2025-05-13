@@ -4,7 +4,7 @@ import sys
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 sys.path.append(
-    r"D:\Full Stack Web Developer\Python Task\RealTime\Tensorflow\models\research"
+    r"./Tensorflow/models/research"
 )
 
 import queue
@@ -80,10 +80,33 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 
 q = queue.Queue()
 detection_lock = threading.Lock()
+label_id_offset = 1
 i1 = 1
 detections1 = None
+productive_time = 0
+total_time = 0
 
-def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0.5, draw_limit=5):
+
+def update_metadata(
+    classes, scores, category_index, threshold=0.5, draw_limit=2
+):
+    # print(len(boxes))
+    for i in range(
+        min(len(classes), draw_limit)
+    ):  # draw up to 20 boxes or adjust as needed
+        score = scores[i]
+        # print(score, i)
+        if score >= threshold:
+            # print("in", score)
+            class_id = int(classes[i])
+            global total_time
+            total_time += 0.5
+            if category_index[class_id]["name"] == "Writing":
+                global productive_time
+                productive_time += 0.5
+
+
+def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0.5, draw_limit=2):
     height, width, _ = image.shape
     # print(len(boxes))
     for i in range(min(len(boxes), draw_limit)):  # draw up to 20 boxes or adjust as needed
@@ -98,7 +121,7 @@ def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0
                 if class_id in category_index
                 else str(class_id)
             )
-            label = f"{class_name}: {int(score * 100)}%"
+            label = f"{class_name}: {int(score * 100)}%, Total Time: {total_time}, Prod Time: {productive_time}"
 
             # If box coords are normalized → denormalize
             ymin, xmin, ymax, xmax = box
@@ -117,7 +140,7 @@ def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
 
             # Put label above box
-            label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+            label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
             label_ymin = max(ymin, label_size[1] + 10)
             cv2.rectangle(
                 image,
@@ -131,7 +154,7 @@ def draw_boxes_opencv(image, boxes, classes, scores, category_index, threshold=0
                 label,
                 (xmin, label_ymin - 5),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
+                1,
                 (0, 0, 0),
                 2,
             )
@@ -177,6 +200,13 @@ def do_detect(detection_interval = 0.5):
             # print("in 1 end")
             with detection_lock:
                 detections1 = detections
+                update_metadata(
+                    detections1["detection_classes"] + label_id_offset,
+                    detections1["detection_scores"],
+                    category_index,
+                    threshold=0.75
+                )
+
             time.sleep(detection_interval)
 
 
@@ -198,7 +228,6 @@ def main1():
             frame = q.get()
             image_np = np.array(frame)
             image_np_with_detections = image_np.copy()
-            label_id_offset = 1
             if detections1:
                 # print("in 2")
                 image_np_with_detections = draw_boxes_opencv(
@@ -207,9 +236,9 @@ def main1():
                     detections1["detection_classes"] + label_id_offset,
                     detections1["detection_scores"],
                     category_index,
-                    threshold=0.5,  # or any min_score_thresh
+                    threshold=0.75,  # or any min_score_thresh
                 )
-            resized_frame = ResizeWithAspectRatio(image_np_with_detections, width=1280)
+            resized_frame = ResizeWithAspectRatio(image_np_with_detections, width=1440)
             cv2.imshow("Object Detection", resized_frame)
 
         # This must be in the main thread

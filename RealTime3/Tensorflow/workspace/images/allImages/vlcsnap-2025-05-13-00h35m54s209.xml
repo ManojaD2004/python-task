@@ -1,0 +1,26 @@
+<annotation>
+	<folder>allImages</folder>
+	<filename>vlcsnap-2025-05-13-00h35m54s209.png</filename>
+	<path>/home/manojad/FullStackDevs/PythonTask/RealTime3/Tensorflow/workspace/images/allImages/vlcsnap-2025-05-13-00h35m54s209.png</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>2304</width>
+		<height>1296</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Packing</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>680</xmin>
+			<ymin>380</ymin>
+			<xmax>1784</xmax>
+			<ymax>1186</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,8 +1,8 @@
 item { 
-	name:'Packing'
+	name:'Writing'
 	id:1
 }
 item { 
-	name:'NoPacking'
+	name:'NoWriting'
 	id:2
 }

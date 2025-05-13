@@ -1,8 +1,6 @@
 import sys
 
-sys.path.append(
-    r"D:\Full Stack Web Developer\Python Task\RealTime\Tensorflow\models\research"
-)
+sys.path.append(r"./Tensorflow/models/research")
 
 import tensorflow as tf
 from object_detection.utils import config_util
