@@ -1,0 +1,18 @@
+{
+    "7": {
+        "empName": "Manoja D",
+        "empUserName": "manoja-d-15cf3f",
+        "empId": "7",
+        "images": [
+            "./images/Manu.jpg"
+        ]
+    },
+    "2": {
+        "empName": "Aryan C",
+        "empUserName": "aryan-c-75cf3f",
+        "empId": "2",
+        "images": [
+            "./images/Aryan.jpg"
+        ]
+    }
+}
